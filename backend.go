@@ -38,7 +38,20 @@ type backend struct {
 }
 
 func (be *backend) Get(req *hkp.LookupRequest) (openpgp.EntityList, error) {
-	return nil, nil // TODO
+	var packets []byte
+	err := be.db.QueryRow(
+		`SELECT
+			Key.packets
+		FROM Key, Identity WHERE
+			to_tsvector(Identity.name) @@ to_tsquery($1) AND
+			Key.id = Identity.key`,
+		req.Search,
+	).Scan(&packets)
+	if err != nil {
+		return nil, err
+	}
+
+	return openpgp.ReadKeyRing(bytes.NewReader(packets))
 }
 
 func (be *backend) Index(req *hkp.LookupRequest) ([]hkp.IndexKey, error) {

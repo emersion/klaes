@@ -24,7 +24,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	db, err := sql.Open("postgres", "host=/run/postgresql user=simon dbname=klaes")
+	db, err := sql.Open("postgres", "host=/run/postgresql dbname=klaes")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,7 +34,9 @@ func main() {
 
 	switch flag.Arg(0) {
 	case "serve", "":
-		log.Fatal(http.ListenAndServe(":8080", s))
+		addr := ":8080"
+		log.Println("Server listing on address", addr)
+		log.Fatal(http.ListenAndServe(addr, s))
 	case "import":
 		var r io.Reader = os.Stdin
 		if armored {
