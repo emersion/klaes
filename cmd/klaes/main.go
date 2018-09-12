@@ -5,6 +5,7 @@ import (
 	"flag"
 	"io"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/emersion/klaes"
@@ -33,7 +34,7 @@ func main() {
 
 	switch flag.Arg(0) {
 	case "serve", "":
-		// TODO
+		log.Fatal(http.ListenAndServe(":8080", s))
 	case "import":
 		var r io.Reader = os.Stdin
 		if armored {

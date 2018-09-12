@@ -1,6 +1,7 @@
 module github.com/emersion/klaes
 
 require (
+	github.com/emersion/go-openpgp-hkp v0.0.0-20180909123015-1db10a534403
 	github.com/emersion/go-openpgp-wkd v0.0.0-20180725221307-62e4b163f8cd
 	github.com/lib/pq v1.0.0
 	github.com/pkg/errors v0.8.0
