@@ -6,8 +6,8 @@ import (
 	"encoding/binary"
 	"time"
 
-	"github.com/emersion/go-openpgp-wkd"
 	"github.com/emersion/go-openpgp-hkp"
+	"github.com/emersion/go-openpgp-wkd"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/packet"
@@ -55,7 +55,63 @@ func (be *backend) Get(req *hkp.LookupRequest) (openpgp.EntityList, error) {
 }
 
 func (be *backend) Index(req *hkp.LookupRequest) ([]hkp.IndexKey, error) {
-	return nil, nil // TODO
+	rows, err := be.db.Query(
+		`SELECT
+			Key.id, Key.fingerprint, Key.creation_time, Key.algo, Key.bit_length
+		FROM Key, Identity WHERE
+			to_tsvector(Identity.name) @@ to_tsquery($1) AND
+			Key.id = Identity.key`,
+		req.Search,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var keys []hkp.IndexKey
+	for rows.Next() {
+		var id int
+		var key hkp.IndexKey
+		var fingerprint []byte
+		if err := rows.Scan(&id, &fingerprint, &key.CreationTime, &key.Algo, &key.BitLength); err != nil {
+			return nil, err
+		}
+
+		if len(fingerprint) != 20 {
+			return nil, errors.New("klaes: invalid key fingerprint length in DB")
+		}
+		copy(key.Fingerprint[:], fingerprint)
+
+		identRows, err := be.db.Query(
+			`SELECT
+				Identity.name, Identity.creation_time
+			FROM Identity WHERE
+				Identity.key = $1`,
+			id,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		for identRows.Next() {
+			var ident hkp.IndexIdentity
+			if err := identRows.Scan(&ident.Name, &ident.CreationTime); err != nil {
+				return nil, err
+			}
+
+			key.Identities = append(key.Identities, ident)
+		}
+		if err := identRows.Err(); err != nil {
+			return nil, err
+		}
+
+		keys = append(keys, key)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return keys, nil
 }
 
 func (be *backend) importEntity(e *openpgp.Entity) error {

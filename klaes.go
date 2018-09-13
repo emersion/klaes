@@ -10,7 +10,7 @@ import (
 
 type Server struct {
 	backend backend
-	hkp hkp.Handler
+	hkp     hkp.Handler
 }
 
 func NewServer(db *sql.DB) *Server {
