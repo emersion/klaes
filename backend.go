@@ -57,7 +57,8 @@ func (be *backend) Get(req *hkp.LookupRequest) (openpgp.EntityList, error) {
 func (be *backend) Index(req *hkp.LookupRequest) ([]hkp.IndexKey, error) {
 	rows, err := be.db.Query(
 		`SELECT
-			Key.id, Key.fingerprint, Key.creation_time, Key.algo, Key.bit_length
+			Key.id, Key.fingerprint, Key.creation_time, Key.expiration_time,
+			Key.algo, Key.bit_length
 		FROM Key, Identity WHERE
 			to_tsvector(Identity.name) @@ to_tsquery($1) AND
 			Key.id = Identity.key`,
@@ -73,7 +74,7 @@ func (be *backend) Index(req *hkp.LookupRequest) ([]hkp.IndexKey, error) {
 		var id int
 		var key hkp.IndexKey
 		var fingerprint []byte
-		if err := rows.Scan(&id, &fingerprint, &key.CreationTime, &key.Algo, &key.BitLength); err != nil {
+		if err := rows.Scan(&id, &fingerprint, &key.CreationTime, &key.ExpirationTime, &key.Algo, &key.BitLength); err != nil {
 			return nil, err
 		}
 
@@ -84,7 +85,7 @@ func (be *backend) Index(req *hkp.LookupRequest) ([]hkp.IndexKey, error) {
 
 		identRows, err := be.db.Query(
 			`SELECT
-				Identity.name, Identity.creation_time
+				Identity.name, Identity.creation_time, Identity.expiration_time
 			FROM Identity WHERE
 				Identity.key = $1`,
 			id,
@@ -95,7 +96,7 @@ func (be *backend) Index(req *hkp.LookupRequest) ([]hkp.IndexKey, error) {
 
 		for identRows.Next() {
 			var ident hkp.IndexIdentity
-			if err := identRows.Scan(&ident.Name, &ident.CreationTime); err != nil {
+			if err := identRows.Scan(&ident.Name, &ident.CreationTime, &ident.ExpirationTime); err != nil {
 				return nil, err
 			}
 
@@ -141,7 +142,7 @@ func (be *backend) importEntity(e *openpgp.Entity) error {
 			expiration_time, algo, bit_length, packets)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
 		pub.Fingerprint[:], int64(pub.KeyId), int32(keyid32),
-		sig.CreationTime, signatureExpirationTime(sig), pub.PubKeyAlgo,
+		pub.CreationTime, signatureExpirationTime(sig), pub.PubKeyAlgo,
 		bitLength, b.Bytes(),
 	).Scan(&id)
 	if err != nil {
