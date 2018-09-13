@@ -37,17 +37,34 @@ type backend struct {
 	db *sql.DB
 }
 
+func (be *backend) lookup(req *hkp.LookupRequest) (where string, v interface{}) {
+	keyIDSearch := hkp.ParseKeyIDSearch(req.Search)
+	if fingerprint := keyIDSearch.Fingerprint(); fingerprint != nil {
+		return "fingerprint = $1", (*fingerprint)[:]
+	} else if id64 := keyIDSearch.KeyId(); id64 != nil {
+		return "keyid64 = $1", int64(*id64)
+	} else if id32 := keyIDSearch.KeyIdShort(); id32 != nil {
+		return "keyid32 = $1", int32(*id32)
+	}
+
+	return "to_tsvector(Identity.name) @@ to_tsquery($1)", req.Search
+}
+
 func (be *backend) Get(req *hkp.LookupRequest) (openpgp.EntityList, error) {
+	where, v := be.lookup(req)
+
 	var packets []byte
 	err := be.db.QueryRow(
 		`SELECT
 			Key.packets
 		FROM Key, Identity WHERE
-			to_tsvector(Identity.name) @@ to_tsquery($1) AND
+			` + where + ` AND
 			Key.id = Identity.key`,
-		req.Search,
+		v,
 	).Scan(&packets)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return nil, nil
+	} else if err != nil {
 		return nil, err
 	}
 
@@ -55,14 +72,16 @@ func (be *backend) Get(req *hkp.LookupRequest) (openpgp.EntityList, error) {
 }
 
 func (be *backend) Index(req *hkp.LookupRequest) ([]hkp.IndexKey, error) {
+	where, v := be.lookup(req)
+
 	rows, err := be.db.Query(
 		`SELECT
 			Key.id, Key.fingerprint, Key.creation_time, Key.expiration_time,
 			Key.algo, Key.bit_length
 		FROM Key, Identity WHERE
-			to_tsvector(Identity.name) @@ to_tsquery($1) AND
+			` + where + ` AND
 			Key.id = Identity.key`,
-		req.Search,
+		v,
 	)
 	if err != nil {
 		return nil, err
@@ -160,7 +179,7 @@ func (be *backend) importEntity(e *openpgp.Entity) error {
 		}
 
 		_, err = tx.Exec(
-			`INSERT INTO Identity key, name, creation_time, expiration_time,
+			`INSERT INTO Identity(key, name, creation_time, expiration_time,
 				wkd_hash)
 			VALUES ($1, $2, $3, $4, $5)`,
 			id, ident.Name, sig.CreationTime,
