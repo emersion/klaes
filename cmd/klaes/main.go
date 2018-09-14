@@ -18,7 +18,7 @@ import (
 var armored bool
 
 func init() {
-	flag.BoolVar(&armored, "armored", true, "import: read an armored keyring")
+	flag.BoolVar(&armored, "armor", false, "import, export: use an armored keyring")
 }
 
 func main() {
@@ -63,6 +63,34 @@ func main() {
 			if err := s.Import(e); err != nil {
 				log.Fatal(err)
 			}
+		}
+	case "export":
+		var w io.Writer = os.Stdout
+		if armored {
+			aw, err := armor.Encode(w, openpgp.PublicKeyType, nil)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer aw.Close()
+			w = aw
+		}
+
+		ch := make(chan openpgp.EntityList, 32)
+		done := make(chan error, 1)
+		go func() {
+			done <- s.Export(ch)
+		}()
+
+		for el := range ch {
+			for _, e := range el {
+				if err := e.Serialize(w); err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+
+		if err := <-done; err != nil {
+			log.Fatal(err)
 		}
 	default:
 		log.Fatal("Unknown command")

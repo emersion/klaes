@@ -197,3 +197,36 @@ func (be *backend) importEntity(e *openpgp.Entity) error {
 
 	return nil
 }
+
+func (be *backend) exportEntities(ch chan<- openpgp.EntityList) error {
+	defer close(ch)
+
+	rows, err := be.db.Query(
+		`SELECT
+			Key.packets
+		FROM Key`,
+	)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var packets []byte
+		if err := rows.Scan(&packets); err != nil {
+			return err
+		}
+
+		el, err := openpgp.ReadKeyRing(bytes.NewReader(packets))
+		if err != nil {
+			return err
+		}
+
+		ch <- el
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}

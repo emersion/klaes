@@ -27,3 +27,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) Import(e *openpgp.Entity) error {
 	return s.backend.importEntity(e)
 }
+
+func (s *Server) Export(ch chan<- openpgp.EntityList) error {
+	return s.backend.exportEntities(ch)
+}
