@@ -34,6 +34,10 @@ func main() {
 	}
 	defer db.Close()
 
+	if err := db.Ping(); err != nil {
+		log.Fatal(err)
+	}
+
 	s := klaes.NewServer(db)
 
 	switch flag.Arg(0) {
