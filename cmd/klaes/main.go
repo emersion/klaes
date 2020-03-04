@@ -15,16 +15,20 @@ import (
 	"golang.org/x/crypto/openpgp/packet"
 )
 
-var armored bool
-
-func init() {
-	flag.BoolVar(&armored, "armor", false, "import, export: use an armored keyring")
-}
-
 func main() {
+	var (
+		armored   bool
+		addr      string
+		sqlDriver string
+		sqlSource string
+	)
+	flag.BoolVar(&armored, "armor", false, "import, export: use an armored keyring")
+	flag.StringVar(&addr, "addr", ":8080", "serve: listening address")
+	flag.StringVar(&sqlDriver, "sql-driver", "postgres", "SQL driver name")
+	flag.StringVar(&sqlSource, "sql-source", "host=/run/postgresql dbname=klaes", "SQL data source name")
 	flag.Parse()
 
-	db, err := sql.Open("postgres", "host=/run/postgresql dbname=klaes")
+	db, err := sql.Open(sqlDriver, sqlSource)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,7 +38,6 @@ func main() {
 
 	switch flag.Arg(0) {
 	case "serve", "":
-		addr := ":8080"
 		log.Println("Server listing on address", addr)
 		log.Fatal(http.ListenAndServe(addr, s))
 	case "import":

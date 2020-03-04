@@ -58,7 +58,7 @@ func (be *backend) Get(req *hkp.LookupRequest) (openpgp.EntityList, error) {
 		`SELECT
 			Key.packets
 		FROM Key, Identity WHERE
-			` + where + ` AND
+			`+where+` AND
 			Key.id = Identity.key`,
 		v,
 	).Scan(&packets)
@@ -79,7 +79,7 @@ func (be *backend) Index(req *hkp.LookupRequest) ([]hkp.IndexKey, error) {
 			Key.id, Key.fingerprint, Key.creation_time, Key.expiration_time,
 			Key.algo, Key.bit_length
 		FROM Key, Identity WHERE
-			` + where + ` AND
+			`+where+` AND
 			Key.id = Identity.key`,
 		v,
 	)
