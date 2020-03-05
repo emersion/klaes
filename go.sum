@@ -4,8 +4,6 @@ github.com/emersion/go-openpgp-wkd v0.0.0-20191011220651-01af8781ec9b h1:+X8ZnQr
 github.com/emersion/go-openpgp-wkd v0.0.0-20191011220651-01af8781ec9b/go.mod h1:W0+/uECjFHpNyy0K7l3kCaZN5nBdEQbtfgMTXlj7Txg=
 github.com/lib/pq v1.3.0 h1:/qkRGz8zljWiDcFvgpwUpwIAPu3r07TDvs3Rws+o/pU=
 github.com/lib/pq v1.3.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
-github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
-github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/tv42/zbase32 v0.0.0-20160707012821-501572607d02 h1:tcJ6OjwOMvExLlzrAVZute09ocAGa7KqOON60++Gz4E=
 github.com/tv42/zbase32 v0.0.0-20160707012821-501572607d02/go.mod h1:tHlrkM198S068ZqfrO6S8HsoJq2bF3ETfTL+kt4tInY=
 github.com/tv42/zbase32 v0.0.0-20190604154422-aacc64a8f915 h1:vX9DBbEHmrebYnVthUTzMO6Zc1vvConJdD2s0uvXrfw=

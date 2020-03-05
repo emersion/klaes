@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/binary"
+	"fmt"
 	"time"
 
 	"github.com/emersion/go-openpgp-hkp"
 	"github.com/emersion/go-openpgp-wkd"
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/packet"
 )
@@ -98,7 +98,7 @@ func (be *backend) Index(req *hkp.LookupRequest) ([]hkp.IndexKey, error) {
 		}
 
 		if len(fingerprint) != 20 {
-			return nil, errors.New("klaes: invalid key fingerprint length in DB")
+			return nil, fmt.Errorf("klaes: invalid key fingerprint length in DB")
 		}
 		copy(key.Fingerprint[:], fingerprint)
 
@@ -140,19 +140,19 @@ func (be *backend) importEntity(e *openpgp.Entity) error {
 
 	bitLength, err := pub.BitLength()
 	if err != nil {
-		return errors.Wrap(err, "failed to get key bit length")
+		return fmt.Errorf("failed to get key bit length: %v", err)
 	}
 
 	keyid32 := binary.BigEndian.Uint32(pub.Fingerprint[16:20])
 
 	var b bytes.Buffer
 	if err := e.Serialize(&b); err != nil {
-		return errors.Wrap(err, "failed to serialize public key")
+		return fmt.Errorf("failed to serialize public key: %v", err)
 	}
 
 	tx, err := be.db.Begin()
 	if err != nil {
-		return errors.Wrap(err, "failed to create transaction")
+		return fmt.Errorf("failed to create transaction: %v", err)
 	}
 
 	var id int
@@ -166,7 +166,7 @@ func (be *backend) importEntity(e *openpgp.Entity) error {
 	).Scan(&id)
 	if err != nil {
 		tx.Rollback()
-		return errors.Wrap(err, "failed to insert key")
+		return fmt.Errorf("failed to insert key: %v", err)
 	}
 
 	for _, ident := range e.Identities {
@@ -175,7 +175,7 @@ func (be *backend) importEntity(e *openpgp.Entity) error {
 		wkdHash, err := wkd.HashAddress(ident.UserId.Email)
 		if err != nil {
 			tx.Rollback()
-			return errors.Wrap(err, "failed to hash email")
+			return fmt.Errorf("failed to hash email: %v", err)
 		}
 
 		_, err = tx.Exec(
@@ -187,12 +187,12 @@ func (be *backend) importEntity(e *openpgp.Entity) error {
 		)
 		if err != nil {
 			tx.Rollback()
-			return errors.Wrap(err, "failed to insert identity")
+			return fmt.Errorf("failed to insert identity: %v", err)
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return errors.Wrap(err, "failed to commit transaction")
+		return fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
 	return nil
