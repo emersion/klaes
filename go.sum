@@ -1,3 +1,6 @@
+github.com/ProtonMail/crypto v1.0.0 h1:NAWdVCYP0Gohq5TeRflzEzrtDwWBL96Al3QxoRDw17c=
+github.com/ProtonMail/crypto v2.0.0+incompatible h1:5V3zRPPTfA0yWq4blnBSCBTK1Zm8krwpvHkgmB/7lB4=
+github.com/ProtonMail/crypto v2.0.0+incompatible/go.mod h1:QZ3jOH/Y1DBiLPGPYb9eoT8TNsDzy8gK79OkEldsqao=
 github.com/emersion/go-openpgp-hkp v0.0.0-20180913132822-059dbf2e8bfa h1:Kjjpq14LzOFt54TJcxg0PohuQgY96bsiJnOL1P6Mh4g=
 github.com/emersion/go-openpgp-hkp v0.0.0-20180913132822-059dbf2e8bfa/go.mod h1:LfRImiw0GeR+FRW1+A9iNCDXduvmnzQ+2ayZm1u3HRQ=
 github.com/emersion/go-openpgp-wkd v0.0.0-20191011220651-01af8781ec9b h1:+X8ZnQr1yPS1LmU+0H2oISNxXCxDl5zU8cfngvH6UbQ=
