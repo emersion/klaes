@@ -9,3 +9,5 @@ require (
 	github.com/tv42/zbase32 v0.0.0-20190604154422-aacc64a8f915 // indirect
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 )
+
+replace golang.org/x/crypto => github.com/ProtonMail/crypto v2.0.0+incompatible
